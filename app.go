@@ -3,13 +3,10 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -23,25 +20,6 @@ type Response struct {
 	Status  int
 	Token   string
 	Message string
-}
-
-func (r *Response) generateToken() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	JwtSigningKey := os.Getenv("JWT_SIGNING_KEY")
-	jwtSignedKeyBytes := []byte(JwtSigningKey)
-
-	claims := &jwt.StandardClaims{
-		ExpiresAt: 15000,
-		Issuer:    "flair-auth",
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	ss, err := token.SignedString(jwtSignedKeyBytes)
-
-	r.Token = ss
 }
 
 // Initialize accepts database credentials and initializes the app.
@@ -73,14 +51,14 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 
 	var loginRequest Login
 
+	dec := json.NewDecoder(r.Body)
+	enc := json.NewEncoder(w)
+	err := dec.Decode(&loginRequest)
+
 	err, jwtToken := GenerateJWT(loginRequest.Username)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	dec := json.NewDecoder(r.Body)
-	enc := json.NewEncoder(w)
-	err = dec.Decode(&loginRequest)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
@@ -109,14 +87,14 @@ func (a *App) signup(w http.ResponseWriter, r *http.Request) {
 
 	var signupRequest Signup
 
+	dec := json.NewDecoder(r.Body)
+	enc := json.NewEncoder(w)
+	err := dec.Decode(&signupRequest)
+
 	err, jwtToken := GenerateJWT(signupRequest.Username)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	dec := json.NewDecoder(r.Body)
-	enc := json.NewEncoder(w)
-	err = dec.Decode(&signupRequest)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)

@@ -15,8 +15,10 @@ type Login struct {
 
 // Signup model
 type Signup struct {
+	Name string `json:"name"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Email string `json:"email"`
 }
 
 func userExists(username string, db *sql.DB) bool {
