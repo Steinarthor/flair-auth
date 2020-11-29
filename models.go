@@ -9,25 +9,24 @@ import (
 
 // Login model
 type Login struct {
-	Username string `json:"username"`
+	Email string `json:"email"`
 	Password string `json:"password"`
 }
 
 // Signup model
 type Signup struct {
 	Name string `json:"name"`
-	Username string `json:"username"`
 	Password string `json:"password"`
 	Email string `json:"email"`
 }
 
-func userExists(username string, db *sql.DB) bool {
+func userExists(email string, db *sql.DB) bool {
 	var userQuery string
-	checkIfUserExists, err := db.Prepare("SELECT EXISTS(SELECT 1 FROM auth WHERE username=?)")
+	checkIfUserExists, err := db.Prepare("SELECT EXISTS(SELECT 1 FROM authentication WHERE email=?)")
 
 	defer checkIfUserExists.Close()
 
-	row := checkIfUserExists.QueryRow(username)
+	row := checkIfUserExists.QueryRow(email)
 	err = row.Scan(&userQuery)
 	if err != nil {
 		log.Fatal(err)
@@ -39,11 +38,11 @@ func userExists(username string, db *sql.DB) bool {
 	return userExists
 }
 
-// Login accepts username and password and does an authentication check on the users credentials.
-func (l *Login) Login(username, password string, db *sql.DB) error {
+// Login accepts email and password and does an authentication check on the users credentials.
+func (l *Login) Login(email, password string, db *sql.DB) error {
 	var pwd string
 	// Look for the user
-	userPwd, err := db.Prepare("SELECT password FROM auth WHERE username=?")
+	userPwd, err := db.Prepare("SELECT password FROM authentication WHERE email=?")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,9 +50,9 @@ func (l *Login) Login(username, password string, db *sql.DB) error {
 	// Close prepared statements.
 	defer userPwd.Close()
 
-	if userExists(username, db) {
+	if userExists(email, db) {
 
-		row := userPwd.QueryRow(username)
+		row := userPwd.QueryRow(email)
 		err := row.Scan(&pwd)
 		if err != nil {
 			log.Fatal(err)
@@ -71,21 +70,20 @@ func (l *Login) Login(username, password string, db *sql.DB) error {
 }
 
 // Signup accepts username, password and an email and registers an creates a new account.
-func (s *Signup) Signup(username, password string, db *sql.DB) error {
-
+func (s *Signup) Signup(email, name, password string, db *sql.DB) error {
 	// Add a new user to db
-	addNewAuth, err := db.Prepare("INSERT INTO auth(username, password) values(?,?)")
+	addNewAuth, err := db.Prepare("INSERT INTO authentication(email, name, password) VALUES (?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer addNewAuth.Close()
 
-	if userExists(username, db) {
+	if userExists(email, db) {
 		return errors.New("user already exits")
 	} else {
-		_, err := addNewAuth.Exec(username, HashAndSalt(password))
+		_, err := addNewAuth.Exec(email, name, HashAndSalt(password))
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(err.Error())
 		}
 		return nil
 	}

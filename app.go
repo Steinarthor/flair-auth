@@ -3,11 +3,12 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/gorilla/mux"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type App struct {
@@ -55,7 +56,7 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	err := dec.Decode(&loginRequest)
 
-	err, jwtToken := GenerateJWT(loginRequest.Username)
+	err, jwtToken := GenerateJWT(loginRequest.Email)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,7 +65,7 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 	}
 
-	err = loginRequest.Login(loginRequest.Username, loginRequest.Password, a.Db)
+	err = loginRequest.Login(loginRequest.Email, loginRequest.Password, a.Db)
 
 	if err != nil {
 		enc.Encode(Response{
@@ -91,7 +92,7 @@ func (a *App) signup(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	err := dec.Decode(&signupRequest)
 
-	err, jwtToken := GenerateJWT(signupRequest.Username)
+	err, jwtToken := GenerateJWT(signupRequest.Email)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,7 +101,7 @@ func (a *App) signup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 	}
 
-	err = signupRequest.Signup(signupRequest.Username, signupRequest.Password, a.Db)
+	err = signupRequest.Signup(signupRequest.Email, signupRequest.Name, signupRequest.Password, a.Db)
 
 	if err != nil {
 		enc.Encode(Response{
