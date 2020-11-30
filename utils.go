@@ -1,16 +1,17 @@
 package main
 
 import (
-	"github.com/dgrijalva/jwt-go"
-	"github.com/joho/godotenv"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"os"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Claims struct {
-	Username string
+	Email string
 	jwt.StandardClaims
 }
 
@@ -36,7 +37,7 @@ func ComparePassword(hashedPwd string, plainPwd string) bool {
 }
 
 // GenerateJWT returns a JWT token on success and error on failure.
-func GenerateJWT(username string) (error, string) {
+func GenerateJWT(email string) (error, string) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -45,7 +46,7 @@ func GenerateJWT(username string) (error, string) {
 	jwtSignedKeyBytes := []byte(JwtSigningKey)
 
 	claims := &Claims{
-		Username: username,
+		Email: email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * time.Duration(1)).Unix(),
 			IssuedAt:  time.Now().Unix(),

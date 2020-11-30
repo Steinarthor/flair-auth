@@ -49,7 +49,6 @@ func (l *Login) Login(email, password string, db *sql.DB) error {
 
 	// Close prepared statements.
 	defer userPwd.Close()
-
 	if userExists(email, db) {
 
 		row := userPwd.QueryRow(email)
